@@ -57,7 +57,7 @@ int main(int argc, char *argv[]) {
     else
       puts("Unable to get client address");
 
-    HandleTCPClient(clntSock);
+    HandleTCPClient(clntSock,N);
   }
   // NOT REACHED
 }

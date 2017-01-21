@@ -72,28 +72,53 @@ int AcceptTCPConnection(int servSock) {
   return clntSock;
 }
 
-void HandleTCPClient(int clntSocket) {
+void HandleTCPClient(int clntSocket, int N) {
   char buffer[BUFSIZE]; // Buffer for echo string
-
+    ssize_t t = 0;
   // Receive message from client
-  ssize_t numBytesRcvd = recv(clntSocket, buffer, BUFSIZE, 0);
+
+    ssize_t numBytesRcvd = recv(clntSocket, buffer, BUFSIZE, 0);
+
+    t = t + numBytesRcvd;
   if (numBytesRcvd < 0)
     DieWithSystemMessage("recv() failed");
 
   // Send received string and receive again until end of stream
   while (numBytesRcvd > 0) { // 0 indicates end of stream
     // Echo message back to client
-    ssize_t numBytesSent = send(clntSocket, buffer, numBytesRcvd, 0);
-    if (numBytesSent < 0)
-      DieWithSystemMessage("send() failed");
-    else if (numBytesSent != numBytesRcvd)
-      DieWithUserMessage("send()", "sent unexpected number of bytes");
 
-    // See if there is more data to receive
-    numBytesRcvd = recv(clntSocket, buffer, BUFSIZE, 0);
+    if(strlen(buffer) < t)
+        break;
+  // See if there is more data to receive
+    numBytesRcvd = recv(clntSocket, buffer + t, BUFSIZE - t, 0);
+      t = t + numBytesRcvd;
+    /*  bool br1 = false;
+      while(!br1)
+      {
+        numBytesRcvd = recv(clntSocket, buffer, BUFSIZE, 0);
+          for(int b = 0; b < BUFSIZE; b++)
+          {
+              if(buffer[b] == '\0')
+              {
+                  br1 = true;
+                  break;
+              }
+          }
+      }*/
     if (numBytesRcvd < 0)
       DieWithSystemMessage("recv() failed");
   }
-
+        ssize_t numBytesSent = 0;
+    ssize_t l = strlen(buffer);
+    for(int i = 0; i < N;i++)
+    {
+        numBytesSent = send(clntSocket, buffer, l, 0);
+        
+        if (numBytesSent < 0)
+            DieWithSystemMessage("send() failed");
+        else if (numBytesSent != (numBytesRcvd-1))
+            DieWithUserMessage("send()", "sent unexpected number of bytes");
+        
+    }
   close(clntSocket); // Close client socket
 }

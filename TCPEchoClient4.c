@@ -41,9 +41,8 @@ int main(int argc, char *argv[]) {
   // Establish the connection to the echo server
   if (connect(sock, (struct sockaddr *) &servAddr, sizeof(servAddr)) < 0)
     DieWithSystemMessage("connect() failed");
-
   size_t echoStringLen = strlen(echoString); // Determine input length
-
+  echoStringLen++;
   // Send the string to the server
   ssize_t numBytes = send(sock, echoString, echoStringLen, 0);
   if (numBytes < 0)
@@ -54,7 +53,7 @@ int main(int argc, char *argv[]) {
   // Receive the same string back from the server
   unsigned int totalBytesRcvd = 0; // Count of total bytes received
   fputs("Received: ", stdout);     // Setup to print the echoed string
-  while (totalBytesRcvd < echoStringLen) {
+  while (true) {
     char buffer[BUFSIZE]; // I/O buffer
     /* Receive up to the buffer size (minus 1 to leave space for
      a null terminator) bytes from the sender */
@@ -62,14 +61,14 @@ int main(int argc, char *argv[]) {
     if (numBytes < 0)
       DieWithSystemMessage("recv() failed");
     else if (numBytes == 0)
-      DieWithUserMessage("recv()", "connection closed prematurely");
+        break;
     totalBytesRcvd += numBytes; // Keep tally of total bytes
     buffer[numBytes] = '\0';    // Terminate the string!
     fputs(buffer, stdout);      // Print the echo buffer
   }
 
   fputc('\n', stdout); // Print a final linefeed
-
+  N = totalBytesRcvd/(echoStringLen-1);
   printf("N=%d\n", N);
 
   close(sock);
